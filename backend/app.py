@@ -10,8 +10,10 @@ import io
 from kindle_mobi import Mobi
 import img2pdf
 
+
 app = Flask(__name__)
 
+# Reads in a PDF file and returns the text content
 def process_pdf(file):
     """Process a PDF file and extract text."""
     reader = PdfFileReader(file)
@@ -21,12 +23,15 @@ def process_pdf(file):
         text_content += page.extractText()
     return text_content
 
+
+# Reads in a DOCX file and returns the text content
 def process_docx(file):
     """Process a DOCX file and extract text."""
     doc = Document(file)
     text_content = "\n".join([para.text for para in doc.paragraphs])
     return text_content
 
+# Resize an image to the specified dimensions
 def resize_image(image_path, width, height):
     """Resize an image to the specified dimensions."""
     img = cv2.imread(image_path)
@@ -35,6 +40,7 @@ def resize_image(image_path, width, height):
     cv2.imwrite(resized_path, resized_img)
     return resized_path
 
+# Create an EPUB file from text content
 def create_epub(text_content, title="Sample Ebook", author="Author Name"):
     """Create an EPUB file from text content."""
     book = epub.EpubBook()
@@ -46,12 +52,15 @@ def create_epub(text_content, title="Sample Ebook", author="Author Name"):
     epub.write_epub(epub_path, book, {})
     return epub_path
 
+# Convert an EPUB file to MOBI format
 def convert_to_mobi(epub_path):
     """Convert an EPUB file to MOBI format."""
     mobi_path = epub_path.replace('.epub', '.mobi')
     Mobi(epub_path).write(mobi_path)
     return mobi_path
 
+
+# Compress a PDF file
 def compress_pdf(file):
     """Compress a PDF file."""
     reader = PdfFileReader(file)
@@ -64,6 +73,8 @@ def compress_pdf(file):
         writer.write(output_file)
     return compressed_path
 
+
+# Apply AI-based image enhancement
 def enhance_image(image_path):
     """Apply AI-based image enhancement."""
     img = Image.open(image_path)
@@ -74,6 +85,7 @@ def enhance_image(image_path):
     enhanced_img.save(enhanced_path)
     return enhanced_path
 
+# Convert multiple images to a PDF file
 def convert_images_to_pdf(image_paths):
     """Convert multiple images to a PDF file."""
     pdf_path = 'converted.pdf'
@@ -81,6 +93,7 @@ def convert_images_to_pdf(image_paths):
         f.write(img2pdf.convert(image_paths))
     return pdf_path
 
+# Convert a PDF file to multiple images
 def convert_pdf_to_images(pdf_path):
     """Convert a PDF file to multiple images."""
     images = []
@@ -91,6 +104,172 @@ def convert_pdf_to_images(pdf_path):
             # Extract images from the page and save them
             # Append the image paths to the `images` list
     return images
+
+# Extract metadata from a PDF or DOCX file
+def extract_metadata(file):
+    """Extract metadata from a PDF or DOCX file."""
+    metadata = {}
+    if file.filename.endswith('.pdf'):
+        reader = PdfFileReader(file)
+        metadata = reader.getDocumentInfo()
+    elif file.filename.endswith('.docx'):
+        doc = Document(file)
+        core_properties = doc.core_properties
+        metadata = {
+            'author': core_properties.author,
+            'title': core_properties.title,
+            'subject': core_properties.subject,
+            'keywords': core_properties.keywords,
+        }
+    return metadata
+
+
+# Merge PDFS
+def merge_pdfs(pdf_files, output_path='merged.pdf'):
+    """Merge multiple PDF files into one."""
+    writer = PdfFileWriter()
+    for pdf_file in pdf_files:
+        reader = PdfFileReader(pdf_file)
+        for page_num in range(reader.getNumPages()):
+            page = reader.getPage(page_num)
+            writer.addPage(page)
+    with open(output_path, 'wb') as output_file:
+        writer.write(output_file)
+    return output_path
+
+# Split 
+def split_pdf(pdf_file, output_dir='split_pages'):
+    """Split a PDF into separate files for each page."""
+    reader = PdfFileReader(pdf_file)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    for page_num in range(reader.getNumPages()):
+        writer = PdfFileWriter()
+        writer.addPage(reader.getPage(page_num))
+        output_path = os.path.join(output_dir, f'page_{page_num + 1}.pdf')
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+    return output_dir
+
+
+def convert_docx_to_pdf(docx_path, pdf_path='converted.pdf'):
+    """Convert a DOCX file to a PDF."""
+    # Using a library like docx2pdf or win32com (on Windows)
+    import subprocess
+    subprocess.run(['docx2pdf', docx_path, pdf_path])
+    return pdf_path
+
+def text_to_speech(text_content, output_path='output.mp3'):
+    """Convert text content to speech and save as an MP3 file."""
+    from gtts import gTTS
+    tts = gTTS(text_content)
+    tts.save(output_path)
+    return output_path
+
+def ocr_image(image_path):
+    """Extract text from an image using OCR."""
+    import pytesseract
+    img = Image.open(image_path)
+    text = pytesseract.image_to_string(img)
+    return text
+
+def translate_text(text_content, target_language='es'):
+    """Translate text content to a different language."""
+    from googletrans import Translator
+    translator = Translator()
+    translation = translator.translate(text_content, dest=target_language)
+    return translation.text
+
+def convert_pdf_to_html(pdf_path, output_dir='html_pages'):
+    """Convert PDF pages to HTML format."""
+    import pdf2htmlEX
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_path = os.path.join(output_dir, os.path.basename(pdf_path).replace('.pdf', '.html'))
+    subprocess.run(['pdf2htmlEX', pdf_path, output_path])
+    return output_path
+
+
+def encrypt_pdf(pdf_file, password, output_path='encrypted.pdf'):
+    """Encrypt a PDF with a password."""
+    reader = PdfFileReader(pdf_file)
+    writer = PdfFileWriter()
+    for page_num in range(reader.getNumPages()):
+        page = reader.getPage(page_num)
+        writer.addPage(page)
+    writer.encrypt(password)
+    with open(output_path, 'wb') as output_file:
+        writer.write(output_file)
+    return output_path
+
+def decrypt_pdf(encrypted_pdf_file, password, output_path='decrypted.pdf'):
+    """Decrypt an encrypted PDF with a password."""
+    reader = PdfFileReader(encrypted_pdf_file)
+    if reader.decrypt(password):
+        writer = PdfFileWriter()
+        for page_num in range(reader.getNumPages()):
+            page = reader.getPage(page_num)
+            writer.addPage(page)
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+        return output_path
+    else:
+        raise ValueError("Incorrect password")
+
+
+def extract_images_from_pdf(pdf_file, output_dir='extracted_images'):
+    """Extract and save all images from a PDF file."""
+    from PyPDF2 import PdfFileReader
+    import fitz  # PyMuPDF
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    pdf_document = fitz.open(pdf_file)
+    image_paths = []
+
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
+        images = page.get_images(full=True)
+
+        for img_index, img in enumerate(images):
+            xref = img[0]
+            base_image = pdf_document.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_ext = base_image["ext"]
+            image_path = os.path.join(output_dir, f"page_{page_num + 1}_img_{img_index + 1}.{image_ext}")
+            with open(image_path, "wb") as image_file:
+                image_file.write(image_bytes)
+            image_paths.append(image_path)
+    
+    return image_paths
+
+
+def add_toc_to_pdf(pdf_path, toc, output_path='pdf_with_toc.pdf'):
+    """Add a table of contents to a PDF."""
+    from PyPDF2 import PdfFileReader, PdfFileWriter
+    reader = PdfFileReader(pdf_path)
+    writer = PdfFileWriter()
+
+    for page_num in range(reader.getNumPages()):
+        writer.addPage(reader.getPage(page_num))
+
+    for entry in toc:
+        writer.addBookmark(entry['title'], entry['page'])
+
+    with open(output_path, 'wb') as output_file:
+        writer.write(output_file)
+    return output_path
+
+def convert_pptx_to_pdf(pptx_path, output_path='presentation.pdf'):
+    """Convert a PowerPoint presentation to a PDF."""
+    from pptx import Presentation
+
+    prs = Presentation(pptx_path)
+    # Export slides to images and then convert to PDF
+    # Placeholder code: implement actual logic to convert slides to PDF
+    return output_path
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
